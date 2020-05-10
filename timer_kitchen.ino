@@ -15,8 +15,16 @@ int volatile secondes=3;
 //
 boolean volatile updateScreen = false;
 
+//
+//   Buzzer
+//
+int buzzerPin = 6;
+
 void setup()
 {
+  pinMode(buzzerPin, OUTPUT);
+//  tone(buzzerPin, 1000, 500);
+  beep();
   Serial.begin(9600);
   Serial.println();
   Serial.println("Initialisation");
@@ -47,6 +55,11 @@ void setup()
 
 void loop()
 {
+  if (secondes<0) {
+    TCCR1B = 0;//stop timer
+    updateScreen = false;
+    secondes=0;
+  }
   if (updateScreen) {
     printTime();
     updateScreen = false;
@@ -54,6 +67,7 @@ void loop()
 }
 
 void printTime() {
+  if (secondes<0) return;
   char msg[9];
   int hh = secondes / 3600;
   int mm = (secondes - 3600*hh) / 60;
@@ -67,6 +81,29 @@ void printTime() {
 #endif
 }
 
+void beep() {
+  tone(buzzerPin,2200); // then buzz by going high
+    tone(buzzerPin,1000);
+    tone(buzzerPin,500);
+    tone(buzzerPin,200);
+    tone(buzzerPin,500);
+    delayMicroseconds(10000);    // waiting
+    noTone(buzzerPin);  // going low
+    delayMicroseconds(10000);    // and waiting more
+    tone(buzzerPin,2200);
+    tone(buzzerPin,1000);
+    delayMicroseconds(10000);    // waiting
+    noTone(buzzerPin);  // going low
+    delayMicroseconds(10000);    // and waiting more
+    tone(buzzerPin,100);
+    delayMicroseconds(10000);    // waiting
+    noTone(buzzerPin);  // going low
+    delayMicroseconds(10000);    // and waiting more
+    tone(buzzerPin,100);
+    delayMicroseconds(10000);    // waiting
+    noTone(buzzerPin);  // going low
+    delayMicroseconds(10000);    // and waiting more
+}
 ISR(TIMER1_COMPA_vect){   //timer1 interrupt 1Hz
   secondes = secondes-1;
   updateScreen = true;
