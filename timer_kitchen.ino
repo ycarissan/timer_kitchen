@@ -1,28 +1,73 @@
-//YWROBOT
-//Compatible with the Arduino IDE 1.0
-//Library version:1.1
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
+#define DEBUG 1
+
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+//
+//     Temps
+//
+int volatile secondes=3;
+
+//
+//  Affichage
+//
+boolean volatile updateScreen = false;
 
 void setup()
 {
+  Serial.begin(9600);
+  Serial.println();
+  Serial.println("Initialisation");
   lcd.init();                      // initialize the lcd 
-  lcd.init();
   // Print a message to the LCD.
   lcd.backlight();
-  lcd.setCursor(3,0);
-  lcd.print("Hello, world!");
-  lcd.setCursor(2,1);
-  lcd.print("Ywrobot Arduino!");
-   lcd.setCursor(0,2);
-  lcd.print("Arduino LCM IIC 2004");
-   lcd.setCursor(2,3);
-  lcd.print("Power By Ec-yuan!");
-}
+  lcd.setCursor(0,0);
+  lcd.print("Initialisation");
+  lcd.print(".");
+  lcd.setCursor(0,1);
+  printTime();
+  cli();          // turn interrupts off
+                  // set timer1 interrupt at 1Hz
+  TCCR1A = 0;     // set entire TCCR1A register to 0
+  TCCR1B = 0;     // same for TCCR1B
+  TCNT1  = 0;     // initialize counter value to 0
+                  // set compare match register for 1hz increments
+  OCR1A = 15624;  // = (16*10^6) / (1*1024) - 1 (must be <65536)
+                  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);               // Set CS12 and CS10 bits for 1024 prescaler
+  TCCR1B |= (1 << CS12) | (1 << CS10);  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
 
+  sei();           //allow interrupts
+  
+
+}
 
 void loop()
 {
+  if (updateScreen) {
+    printTime();
+    updateScreen = false;
+  }
+}
+
+void printTime() {
+  char msg[9];
+  int hh = secondes / 3600;
+  int mm = (secondes - 3600*hh) / 60;
+  int ss = secondes - 3600*hh - 60*mm;
+  sprintf(msg,"%02d:%02d:%02d",hh,mm,ss);
+  lcd.setCursor(0,1);
+  lcd.print(msg);
+#ifdef DEBUG
+  Serial.print("printTime : ");
+  Serial.println(msg);
+#endif
+}
+
+ISR(TIMER1_COMPA_vect){   //timer1 interrupt 1Hz
+  secondes = secondes-1;
+  updateScreen = true;
 }
