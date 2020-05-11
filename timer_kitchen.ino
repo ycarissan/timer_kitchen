@@ -8,7 +8,7 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars
 //
 //     Temps
 //
-int volatile secondes=3;
+int volatile secondes=120;
 
 //
 //  Affichage
@@ -24,7 +24,6 @@ void setup()
 {
   pinMode(buzzerPin, OUTPUT);
 //  tone(buzzerPin, 1000, 500);
-  beep();
   Serial.begin(9600);
   Serial.println();
   Serial.println("Initialisation");
@@ -59,6 +58,12 @@ void loop()
     TCCR1B = 0;//stop timer
     updateScreen = false;
     secondes=0;
+  beep();
+  delay(500);
+  beep();
+  delay(500);
+  beep();
+
   }
   if (updateScreen) {
     printTime();
@@ -104,6 +109,7 @@ void beep() {
     noTone(buzzerPin);  // going low
     delayMicroseconds(10000);    // and waiting more
 }
+
 ISR(TIMER1_COMPA_vect){   //timer1 interrupt 1Hz
   secondes = secondes-1;
   updateScreen = true;
