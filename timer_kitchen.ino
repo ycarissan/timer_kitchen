@@ -1,9 +1,12 @@
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-
 #define DEBUG 1
 
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+//
+//    Encoder
+//
+
+#include <SimpleRotary.h>
+
+SimpleRotary rotary(A0,A1,A2);
 
 //
 //     Temps
@@ -13,6 +16,10 @@ int volatile secondes=120;
 //
 //  Affichage
 //
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
 boolean volatile updateScreen = false;
 
 //
@@ -48,8 +55,6 @@ void setup()
   TIMSK1 |= (1 << OCIE1A);
 
   sei();           //allow interrupts
-  
-
 }
 
 void loop()
@@ -69,6 +74,20 @@ void loop()
     printTime();
     updateScreen = false;
   }
+    
+  byte i;
+
+  // 0 = not turning, 1 = CW, 2 = CCW
+  i = rotary.rotate();
+
+  if ( i == 1 ) {
+    Serial.println("CW");
+  }
+
+  if ( i == 2 ) {
+    Serial.println("CCW");
+  }
+
 }
 
 void printTime() {
